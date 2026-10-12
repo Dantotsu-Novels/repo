@@ -1,0 +1,8 @@
+ext {
+    extName = 'Libgen'
+    extVersionName = '1.5'
+    extVersionCode = 5
+    extSuffix = 'libgen'
+}
+
+apply from: "$rootDir/common.gradle"

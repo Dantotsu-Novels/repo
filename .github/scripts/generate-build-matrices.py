@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 CORE_FILES_REGEX = re.compile(
-    r"^(common/|core/|gradle/|build\.gradle\.kts|common\.gradle\.kts|gradle\.properties|settings\.gradle\.kts|\.github/scripts)"
+    r"^(common/|core/|gradle/|build\.gradle\.kts|common\.gradle|gradle\.properties|settings\.gradle\.kts|\.github/scripts)"
 )
 
 def run_command(command: str) -> str:
@@ -24,7 +24,7 @@ def get_all_modules() -> list[str]:
         return []
     modules = []
     for d in src.iterdir():
-        if d.is_dir() and (d / "build.gradle.kts").exists() or (d / "build.gradle").exists():
+        if d.is_dir() and ((d / "build.gradle.kts").exists() or (d / "build.gradle").exists()):
             modules.append(f":src:{d.name}:assembleRelease")
     return sorted(modules)
 

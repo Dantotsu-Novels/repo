@@ -4,10 +4,10 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlinx-serialization'
 
-def extName = project.extra["extName"]
-def extVersionName = project.extra["extVersionName"]
-def extVersionCode = project.extra["extVersionCode"] as Integer
-def extSuffix = project.extra["extSuffix"]
+def extName = project.findProperty("extName")
+def extVersionName = project.findProperty("extVersionName")
+def extVersionCode = (project.findProperty("extVersionCode") ?: 1) as Integer
+def extSuffix = project.findProperty("extSuffix")
 def fullPkgName = "some.random.${extSuffix}"
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")

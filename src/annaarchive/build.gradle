@@ -1,0 +1,8 @@
+ext {
+    extName = 'AnnaArchive'
+    extVersionName = '1.7'
+    extVersionCode = 7
+    extSuffix = 'novels'
+}
+
+apply from: "$rootDir/common.gradle"
