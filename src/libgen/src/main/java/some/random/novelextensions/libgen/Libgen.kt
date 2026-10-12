@@ -47,7 +47,7 @@ class Libgen : NovelInterface {
         for (mirror in mirrors) {
             try {
                 val fullUrl = "$mirror$path"
-                val res = client.get(fullUrl, headers = defaultHeaders)
+                val res = ani.dantotsu.parsers.WebViewResolver.getWithBypass(fullUrl, defaultHeaders, client, defaultHeaders["User-Agent"] ?: "")
                 if (res.isSuccessful) {
                     currentHost = mirror
                     return res

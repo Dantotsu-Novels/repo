@@ -4,9 +4,9 @@ import ani.dantotsu.parsers.Book
 import ani.dantotsu.parsers.FileUrl
 import ani.dantotsu.parsers.NovelInterface
 import ani.dantotsu.parsers.ShowResponse
+import ani.dantotsu.parsers.WebViewResolver
 import com.lagradost.nicehttp.NiceResponse
 import com.lagradost.nicehttp.Requests
-import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
 @Suppress("unused")
@@ -15,11 +15,13 @@ class AnnaArchive : NovelInterface {
     val name = "Anna's Archive"
     val saveName = "anna"
 
-    // Official active mirrors
+    // Official active mirrors and proxies
     private val mirrors = listOf(
         "https://annas-archive.gl",
         "https://annas-archive.pk",
-        "https://annas-archive.gd"
+        "https://annas-archive.gd",
+        "https://annas-archive.se",
+        "https://annas-archive.li"
     )
 
     private var currentHost = mirrors[0]
@@ -27,8 +29,10 @@ class AnnaArchive : NovelInterface {
     private val volumeRegex = Regex("vol\\.? (\\d+(\\.\\d+)?)|volume (\\d+(\\.\\d+)?)", RegexOption.IGNORE_CASE)
     private val defaultImage = "https://s4.anilist.co/file/anilistcdn/media/manga/cover/medium/default.jpg"
 
+    private val userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+
     private val defaultHeaders = mapOf(
-        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        "User-Agent" to userAgent,
         "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "Accept-Language" to "en-US,en;q=0.9",
         "Sec-Fetch-Dest" to "document",
@@ -49,7 +53,7 @@ class AnnaArchive : NovelInterface {
         for (mirror in mirrors) {
             try {
                 val fullUrl = "$mirror$path"
-                val res = client.get(fullUrl, headers = defaultHeaders)
+                val res = WebViewResolver.getWithBypass(fullUrl, defaultHeaders, client, userAgent)
                 if (res.isSuccessful) {
                     currentHost = mirror
                     return res
@@ -62,15 +66,17 @@ class AnnaArchive : NovelInterface {
     }
 
     private fun parseShowResponse(element: Element): ShowResponse? {
-        val linkElem = if (element.tagName() == "a") element else element.selectFirst("a[href*=/md5/]")
-            ?: return null
+        val linkElem = if (element.tagName() == "a") {
+            element
+        } else {
+            element.selectFirst("a[href*=/md5/], a[href*=/books/]") ?: return null
+        }
 
         val href = linkElem.attr("href")
-        if (!href.contains("/md5/")) return null
+        if (!href.contains("/md5/") && !href.contains("/books/")) return null
 
         val fullCardText = element.text()
         if (!fullCardText.contains("epub", ignoreCase = true) && !element.attr("class").contains("epub", ignoreCase = true)) {
-            // Also allow if the card mentions extension/epub
             val hasEpub = element.select("div, span").any { it.text().contains("epub", ignoreCase = true) }
             if (!hasEpub) return null
         }
@@ -91,10 +97,12 @@ class AnnaArchive : NovelInterface {
         }
 
         val extra = mutableMapOf<String, String>()
-        val author = element.selectFirst("div.italic")?.text() ?: ""
+        val author = element.selectFirst("div.italic")?.text()
+            ?: element.selectFirst("div[class*=text-violet]")?.text()
+            ?: ""
         if (author.isNotBlank()) extra["0"] = author
 
-        val metaLines = element.select("div[class*=text-xs], span[class*=text-xs]").map { it.text() }.filter { it.isNotBlank() }
+        val metaLines = element.select("div[class*=text-xs], span[class*=text-xs], div[class*=text-sm]").map { it.text() }.filter { it.isNotBlank() }
         if (metaLines.isNotEmpty()) {
             extra["1"] = metaLines.first()
             if (metaLines.size > 1) {
@@ -119,13 +127,12 @@ class AnnaArchive : NovelInterface {
 
         val doc = response.document
 
-        // Attempt 1: Modern card selectors with /md5/ links
-        var candidateElements = doc.select("a[href*=/md5/]")
+        // Attempt 1: Modern card selectors with /md5/ or /books/ links
+        val candidateElements = doc.select("a[href*=/md5/], a[href*=/books/]")
         val results = mutableListOf<ShowResponse>()
 
         for (el in candidateElements) {
-            // Use parent container if it wraps richer info
-            val container = el.parent()?.takeIf { it.select("img").isNotEmpty() || it.select("div.italic").isNotEmpty() } ?: el
+            val container = el.parent()?.takeIf { it.select("img").isNotEmpty() || it.select("div.italic").isNotEmpty() || it.hasClass("flex") } ?: el
             val parsed = parseShowResponse(container)
             if (parsed != null && results.none { it.link == parsed.link }) {
                 results.add(parsed)
@@ -134,7 +141,7 @@ class AnnaArchive : NovelInterface {
 
         // Fallback: search general result rows
         if (results.isEmpty()) {
-            val fallbackRows = doc.select("main div[class*=border], div[class*=h-[125]]")
+            val fallbackRows = doc.select("main div[class*=border], div[class*=h-[125]], div.flex.gap-\\[18px\\], div.rounded-lg.shadow")
             for (row in fallbackRows) {
                 val parsed = parseShowResponse(row)
                 if (parsed != null && results.none { it.link == parsed.link }) {
@@ -162,15 +169,17 @@ class AnnaArchive : NovelInterface {
 
         val description = main.selectFirst("div.js-md5-top-box-description")?.text()
             ?: main.selectFirst("div[class*=description]")?.text()
+            ?: main.selectFirst("p.mt-2")?.text()
 
         // Extract download candidates
-        val downloadAnchors = main.select("a[href*=/slow_download/], a.js-download-link, a[href*=library.lol], a[href*=libgen], a[href*=ipfs]")
+        val downloadAnchors = main.select("a[href*=/slow_download/], a.js-download-link, a[href*=library.lol], a[href*=libgen], a[href*=ipfs], a[href*=/download]")
             .filter { a ->
                 val href = a.attr("href")
                 !href.contains("onion") &&
                         !href.contains("torrent") &&
                         !href.contains("/datasets") &&
-                        !href.contains("1lib")
+                        !href.contains("1lib") &&
+                        !href.contains("/account")
             }
 
         val fileUrls = mutableListOf<FileUrl>()
