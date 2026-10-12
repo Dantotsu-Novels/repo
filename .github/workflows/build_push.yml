@@ -13,6 +13,9 @@ on:
       - '.github/workflows/build_push.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -31,7 +34,7 @@ jobs:
       skipBump: ${{ steps.set-env.outputs.SKIP_BUMP }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -53,7 +56,7 @@ jobs:
 
       - name: Check core changes
         id: modified-core
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
         with:
           files: |
             core/**
@@ -84,16 +87,16 @@ jobs:
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           java-version: 17
           distribution: temurin
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
 
       - name: Prepare signing key
         if: env.SIGNING_KEY != ''
@@ -114,7 +117,7 @@ jobs:
           ./gradlew $MODULES
 
       - name: Upload APK artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: "apks-chunk-${{ matrix.chunk.number }}"
           path: "**/build/outputs/apk/**/*.apk"
@@ -127,13 +130,13 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout master branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: master
           fetch-depth: 0
 
       - name: Checkout repo branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         continue-on-error: true
         with:
           ref: repo
@@ -150,12 +153,9 @@ jobs:
           fi
 
       - name: Download APK artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: ~/apk-artifacts
-
-      - name: Setup Android SDK for aapt
-        uses: android-actions/setup-android@v3
 
       - name: Create repository artifacts
         run: |
@@ -168,10 +168,10 @@ jobs:
           python3 master/.github/scripts/merge-repo.py "[]" "master/repo"
 
       - name: Deploy to repo branch
-        uses: EndBug/add-and-commit@v9
-        with:
-          message: "Deploy extensions repo [skip ci]"
-          cwd: "./repo"
-          default_author: github_actions
-          new_branch: repo
-          push: origin repo --force
+        run: |
+          cd repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Deploy extensions repo [skip ci]" || exit 0
+          git push origin repo --force
