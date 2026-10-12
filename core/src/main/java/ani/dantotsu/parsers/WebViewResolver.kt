@@ -13,6 +13,67 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
+private class BypassWebViewClient(
+    private val originalUrl: String,
+    private val cookieManager: CookieManager,
+    private val webView: WebView,
+    private val latch: CountDownLatch,
+    private val solved: AtomicBoolean
+) : WebViewClient() {
+    override fun onPageFinished(view: WebView?, finishedUrl: String?) {
+        super.onPageFinished(view, finishedUrl)
+        val targetUrl = finishedUrl ?: originalUrl
+        val cookies = cookieManager.getCookie(targetUrl) ?: ""
+        val hasDdg = cookies.contains("__ddg1_") || cookies.contains("__ddg2_")
+        val hasCf = cookies.contains("cf_clearance")
+        val isBypassed = !targetUrl.contains("ddos-guard") && !targetUrl.contains("check=1") &&
+                (hasDdg || hasCf || (!targetUrl.contains(".well-known") && cookies.isNotEmpty()))
+
+        if (isBypassed && solved.compareAndSet(false, true)) {
+            cookieManager.flush()
+            latch.countDown()
+            try {
+                webView.stopLoading()
+                webView.destroy()
+            } catch (_: Throwable) {}
+        }
+    }
+}
+
+private class BypassRunnable(
+    private val url: String,
+    private val userAgent: String,
+    private val latch: CountDownLatch,
+    private val solved: AtomicBoolean
+) : Runnable {
+    @SuppressLint("SetJavaScriptEnabled")
+    override fun run() {
+        try {
+            val context = WebViewResolver.getApplicationContext()
+            if (context == null) {
+                latch.countDown()
+                return
+            }
+
+            val webView = WebView(context)
+            val cookieManager = CookieManager.getInstance()
+            cookieManager.setAcceptCookie(true)
+
+            webView.settings.javaScriptEnabled = true
+            webView.settings.domStorageEnabled = true
+            webView.settings.databaseEnabled = true
+            webView.settings.userAgentString = userAgent
+            webView.settings.useWideViewPort = false
+            webView.settings.loadWithOverviewMode = false
+
+            webView.webViewClient = BypassWebViewClient(url, cookieManager, webView, latch, solved)
+            webView.loadUrl(url)
+        } catch (_: Throwable) {
+            latch.countDown()
+        }
+    }
+}
+
 object WebViewResolver {
 
     private const val DEFAULT_TIMEOUT_SECONDS = 30L
@@ -25,7 +86,7 @@ object WebViewResolver {
         }
     }
 
-    private fun getApplicationContext(): Context? {
+    internal fun getApplicationContext(): Context? {
         return try {
             val activityThreadClass = Class.forName("android.app.ActivityThread")
             val currentApplicationMethod = activityThreadClass.getMethod("currentApplication")
@@ -35,60 +96,13 @@ object WebViewResolver {
         }
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
     fun resolve(url: String, userAgent: String, timeoutSeconds: Long = DEFAULT_TIMEOUT_SECONDS): String {
         val latch = CountDownLatch(1)
         val solved = AtomicBoolean(false)
 
         try {
             val mainHandler = Handler(Looper.getMainLooper())
-            mainHandler.post {
-                try {
-                    val context = getApplicationContext() ?: run {
-                        latch.countDown()
-                        return@post
-                    }
-
-                    val webView = WebView(context)
-                    val cookieManager = CookieManager.getInstance()
-                    cookieManager.setAcceptCookie(true)
-
-                    webView.settings.apply {
-                        javaScriptEnabled = true
-                        domStorageEnabled = true
-                        databaseEnabled = true
-                        userAgentString = userAgent
-                        useWideViewPort = false
-                        loadWithOverviewMode = false
-                    }
-
-                    webView.webViewClient = object : WebViewClient() {
-                        override fun onPageFinished(view: WebView?, finishedUrl: String?) {
-                            super.onPageFinished(view, finishedUrl)
-                            val targetUrl = finishedUrl ?: url
-                            val cookies = cookieManager.getCookie(targetUrl) ?: ""
-                            val hasDdg = cookies.contains("__ddg1_") || cookies.contains("__ddg2_")
-                            val hasCf = cookies.contains("cf_clearance")
-                            val isBypassed = !targetUrl.contains("ddos-guard") && !targetUrl.contains("check=1") &&
-                                    (hasDdg || hasCf || (!targetUrl.contains(".well-known") && cookies.isNotEmpty()))
-
-                            if (isBypassed && solved.compareAndSet(false, true)) {
-                                cookieManager.flush()
-                                latch.countDown()
-                                try {
-                                    webView.stopLoading()
-                                    webView.destroy()
-                                } catch (_: Throwable) {}
-                            }
-                        }
-                    }
-
-                    webView.loadUrl(url)
-                } catch (_: Throwable) {
-                    latch.countDown()
-                }
-            }
-
+            mainHandler.post(BypassRunnable(url, userAgent, latch, solved))
             latch.await(timeoutSeconds, TimeUnit.SECONDS)
         } catch (_: Throwable) {}
 
