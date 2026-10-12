@@ -99,12 +99,13 @@ jobs:
         uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
 
       - name: Prepare signing key
-        if: env.SIGNING_KEY != ''
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: |
-          echo "$SIGNING_KEY" | base64 -d > signingkey.jks
-          chmod 600 signingkey.jks
+          if [ -n "$SIGNING_KEY" ]; then
+            echo "$SIGNING_KEY" | base64 -d > signingkey.jks
+            chmod 600 signingkey.jks
+          fi
 
       - name: Build extensions
         env:
@@ -165,7 +166,8 @@ jobs:
 
       - name: Merge into repo branch
         run: |
-          python3 master/.github/scripts/merge-repo.py "[]" "master/repo"
+          cd repo
+          python3 ../master/.github/scripts/merge-repo.py "[]" "../master/repo"
 
       - name: Deploy to repo branch
         run: |

@@ -11,7 +11,7 @@ on:
       - 'common/**'
       - 'gradle/**'
       - 'build.gradle.kts'
-      - 'common.gradle.kts'
+      - 'common.gradle'
       - 'settings.gradle.kts'
 
 concurrency:

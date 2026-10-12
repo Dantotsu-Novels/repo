@@ -1,9 +1,9 @@
 [versions]
 android-gradle = "8.8.2"
-coroutines = "1.10.2"
+coroutines = "1.11.0"
 junit = "4.13.2"
-kotlin-gradle = "2.1.10"
-serialization = "1.7.3"
+kotlin-gradle = "2.4.20"
+serialization = "1.11.0"
 okhttp = "5.0.0-alpha.14"
 jsoup = "1.18.3"
 nicehttp = "0.4.18"

@@ -7,11 +7,13 @@ import sys
 REMOTE_REPO = Path.cwd()
 LOCAL_REPO = Path(sys.argv[2]) if len(sys.argv) > 2 else REMOTE_REPO
 
-# Copy new APKs and icons
+# Copy new APKs, icons, and repo.json
 if (LOCAL_REPO / "apk").exists():
     shutil.copytree(src=LOCAL_REPO / "apk", dst=REMOTE_REPO / "apk", dirs_exist_ok=True)
 if (LOCAL_REPO / "icon").exists():
     shutil.copytree(src=LOCAL_REPO / "icon", dst=REMOTE_REPO / "icon", dirs_exist_ok=True)
+if (LOCAL_REPO / "repo.json").exists():
+    shutil.copy2(src=LOCAL_REPO / "repo.json", dst=REMOTE_REPO / "repo.json")
 
 remote_index = {}
 if (REMOTE_REPO / "index.json").exists():
