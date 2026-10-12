@@ -1,7 +1,7 @@
 # Dantotsu Novel Extensions
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/rebelonion/Dantotsu/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="96" height="96" alt="Dantotsu" />
+  <img src="https://files.catbox.moe/s3mwfr.png" width="96" height="96" alt="Dantotsu" />
 </p>
 
 <p align="center">
@@ -82,7 +82,7 @@ Contributions and new novel sources are welcome!
    extra["extVersionCode"] = 1
    extra["extSuffix"] = "mysource"
 
-   apply(from = rootProject.file("common.gradle.kts"))
+   apply(from = rootProject.file("common.gradle"))
    ```
 4. Create `AndroidManifest.xml` with:
    ```xml
