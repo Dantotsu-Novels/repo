@@ -243,7 +243,7 @@ class Libgen : NovelInterface {
             }
         }
 
-        return Book(name, img, description, fileUrls)
+        return Book(name, FileUrl(img), description, fileUrls)
     }
 
     private class LinkExtractor(

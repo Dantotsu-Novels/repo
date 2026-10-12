@@ -132,7 +132,10 @@ class AnnaArchive : NovelInterface {
         val results = mutableListOf<ShowResponse>()
 
         for (el in candidateElements) {
-            val container = el.parent()?.takeIf { it.select("img").isNotEmpty() || it.select("div.italic").isNotEmpty() || it.hasClass("flex") } ?: el
+            val parentEl: Element? = el.parent()
+            val container: Element = if (parentEl != null &&
+                (parentEl.select("img").isNotEmpty() || parentEl.select("div.italic").isNotEmpty() || parentEl.hasClass("flex"))
+            ) parentEl else el
             val parsed = parseShowResponse(container)
             if (parsed != null && results.none { it.link == parsed.link }) {
                 results.add(parsed)
@@ -194,7 +197,7 @@ class AnnaArchive : NovelInterface {
             }
         }
 
-        return Book(name, img, description, fileUrls)
+        return Book(name, FileUrl(img), description, fileUrls)
     }
 
     private class LinkExtractor(
