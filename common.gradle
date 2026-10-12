@@ -68,6 +68,13 @@ android {
         }
     }
 
+    packaging {
+        resources {
+            // Multi-release jars (okhttp, jspecify, ...) ship identical OSGi manifests
+            excludes += ['META-INF/versions/*/OSGI-INF/MANIFEST.MF']
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
