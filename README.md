@@ -1,7 +1,7 @@
 # Dantotsu Novel Extensions
 
 <p align="center">
-  <img src="https://files.catbox.moe/s3mwfr.png" width="96" height="96" alt="Dantotsu" />
+  <img src="https://files.catbox.moe/s3mwfr.png" alt="Dantotsu" />
 </p>
 
 <p align="center">
