@@ -3,8 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - master
-      - main
+      - repo
     paths:
       - '**'
       - '!**.md'
@@ -130,13 +129,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout master branch
+      - name: Checkout source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          path: master
+          path: source
           fetch-depth: 0
 
-      - name: Checkout repo branch
+      - name: Checkout repo branch (deploy target)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         continue-on-error: true
         with:
@@ -160,14 +159,15 @@ jobs:
 
       - name: Create repository artifacts
         run: |
-          cd master
+          cd source
           python3 ./.github/scripts/move-built-apks.py
           python3 ./.github/scripts/create-repo.py
 
       - name: Merge into repo branch
         run: |
-          cd repo
-          python3 ../master/.github/scripts/merge-repo.py "[]" "../master/repo"
+          mkdir -p repo/repo
+          cd repo/repo
+          python3 ../../source/.github/scripts/merge-repo.py "[]" "../../source/repo"
 
       - name: Deploy to repo branch
         run: |

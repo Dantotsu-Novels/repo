@@ -3,8 +3,7 @@ name: PR Build
 on:
   pull_request:
     branches:
-      - master
-      - main
+      - repo
     paths:
       - 'src/**'
       - 'core/**'
