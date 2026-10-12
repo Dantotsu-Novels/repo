@@ -1,0 +1,33 @@
+[versions]
+android-gradle = "8.8.2"
+coroutines = "1.10.2"
+junit = "4.13.2"
+kotlin-gradle = "2.1.10"
+serialization = "1.7.3"
+okhttp = "5.0.0-alpha.14"
+jsoup = "1.18.3"
+nicehttp = "0.4.18"
+
+[libraries]
+android-gradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle" }
+junit = { module = "junit:junit", version.ref = "junit" }
+kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin-gradle" }
+
+coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+injekt-core = { module = "com.github.null2264.injekt:injekt-core", version = "4135455a2a" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+kotlin-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
+okhttp-doh = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttp" }
+nicehttp = { module = "com.github.Blatzar:NiceHttp", version.ref = "nicehttp" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "android-gradle" }
+android-library = { id = "com.android.library", version.ref = "android-gradle" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin-gradle" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-gradle" }
+
+[bundles]
+common = ["coroutines-core", "coroutines-android", "injekt-core", "kotlin-json", "jsoup", "okhttp", "okhttp-logging", "okhttp-doh", "nicehttp"]

@@ -1,0 +1,177 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - '**'
+      - '!**.md'
+      - '!.github/**'
+      - '.github/scripts/**'
+      - '.github/workflows/build_push.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI_CHUNK_SIZE: 15
+
+jobs:
+  prepare:
+    name: Prepare job
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      latestCommitMessage: ${{ steps.set-env.outputs.LATEST_COMMIT_MESSAGE }}
+      matrix: ${{ steps.generate-matrices.outputs.matrix }}
+      skipBump: ${{ steps.set-env.outputs.SKIP_BUMP }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set env
+        id: set-env
+        run: |
+          LATEST_COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          echo "LATEST_COMMIT_MESSAGE<<EOF" >> $GITHUB_OUTPUT
+          echo "$LATEST_COMMIT_MESSAGE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          skip_bump=false
+          case "$LATEST_COMMIT_MESSAGE" in
+            *"[skip ci]"*|*"[skip bumping version]"*)
+              skip_bump=true
+              ;;
+          esac
+          echo "SKIP_BUMP=$skip_bump" >> $GITHUB_OUTPUT
+
+      - name: Check core changes
+        id: modified-core
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            core/**
+            common/**
+            gradle/libs.versions.toml
+          files_separator: " "
+
+      - name: Bump extensions on core changes
+        if: steps.modified-core.outputs.any_changed == 'true' && steps.set-env.outputs.SKIP_BUMP != 'true'
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          python3 ./.github/scripts/bump-versions.py "${{ steps.set-env.outputs.LATEST_COMMIT_MESSAGE }}" ${{ steps.modified-core.outputs.all_changed_files }}
+          git push
+
+      - name: Generate build matrix
+        id: generate-matrices
+        run: |
+          python3 ./.github/scripts/generate-build-matrices.py "HEAD~1" Release
+
+  build:
+    name: Build extensions (${{ matrix.chunk.number }})
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: ${{ toJson(fromJson(needs.prepare.outputs.matrix).chunk) != '[]' }}
+    strategy:
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Prepare signing key
+        if: env.SIGNING_KEY != ''
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        run: |
+          echo "$SIGNING_KEY" | base64 -d > signingkey.jks
+          chmod 600 signingkey.jks
+
+      - name: Build extensions
+        env:
+          MODULES: ${{ join(matrix.chunk.modules, ' ') }}
+          ALIAS: ${{ secrets.ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          chmod +x ./gradlew
+          ./gradlew $MODULES
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: "apks-chunk-${{ matrix.chunk.number }}"
+          path: "**/build/outputs/apk/**/*.apk"
+          retention-days: 1
+
+  publish:
+    name: Publish repository
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout master branch
+        uses: actions/checkout@v4
+        with:
+          path: master
+          fetch-depth: 0
+
+      - name: Checkout repo branch
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: repo
+          path: repo
+          fetch-depth: 0
+
+      - name: Initialize repo branch if non-existent
+        run: |
+          if [ ! -d "repo/.git" ]; then
+            mkdir -p repo
+            cd repo
+            git init -b repo
+            git remote add origin https://github.com/${{ github.repository }}.git
+          fi
+
+      - name: Download APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ~/apk-artifacts
+
+      - name: Setup Android SDK for aapt
+        uses: android-actions/setup-android@v3
+
+      - name: Create repository artifacts
+        run: |
+          cd master
+          python3 ./.github/scripts/move-built-apks.py
+          python3 ./.github/scripts/create-repo.py
+
+      - name: Merge into repo branch
+        run: |
+          python3 master/.github/scripts/merge-repo.py "[]" "master/repo"
+
+      - name: Deploy to repo branch
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "Deploy extensions repo [skip ci]"
+          cwd: "./repo"
+          default_author: github_actions
+          new_branch: repo
+          push: origin repo --force
