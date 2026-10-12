@@ -5,7 +5,7 @@ This branch contains the distributed index and compiled APK artifacts for Dantot
 ## Repository URL
 Add this URL inside **Dantotsu** (More/Settings → Extensions → Novel Extensions → Add Repository):
 ```text
-https://raw.githubusercontent.com/Dantotsu-Novels/repo/repo/index.json
+https://raw.githubusercontent.com/Dantotsu-Novels/repo/repo/repo/index.json
 ```
 
 ## Source Code

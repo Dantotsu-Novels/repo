@@ -33,7 +33,7 @@ To browse and install novel extensions directly inside **Dantotsu**:
 3. Tap **Add Repository** (or the **+** button).
 4. Paste the following repository URL:
    ```text
-   https://raw.githubusercontent.com/Dantotsu-Novels/repo/repo/index.json
+   https://raw.githubusercontent.com/Dantotsu-Novels/repo/repo/repo/index.json
    ```
    *(or simply `https://github.com/Dantotsu-Novels/repo`)*
 5. Tap **Add**. The novel extensions will appear under the Available tab ready to install.
