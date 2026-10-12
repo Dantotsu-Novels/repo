@@ -1,0 +1,93 @@
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
+import java.util.Properties
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlinx-serialization'
+
+def extName = project.extra["extName"]
+def extVersionName = project.extra["extVersionName"]
+def extVersionCode = project.extra["extVersionCode"] as Integer
+def extSuffix = project.extra["extSuffix"]
+def fullPkgName = "some.random.${extSuffix}"
+
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def signingKeyFile = rootProject.file("signingkey.jks")
+
+android {
+    namespace 'some.random'
+    compileSdk 35
+
+    sourceSets {
+        main {
+            manifest.srcFile "AndroidManifest.xml"
+            java.srcDirs = ['src/main/java']
+            res.srcDirs = ['res']
+            assets.srcDirs = ['assets']
+        }
+    }
+
+    defaultConfig {
+        applicationId fullPkgName
+        minSdk 21
+        targetSdk 35
+        versionCode extVersionCode
+        versionName extVersionName
+
+        manifestPlaceholders = [
+            appName: extName
+        ]
+    }
+
+    signingConfigs {
+        release {
+            if (signingKeyFile.exists() && signingKeyFile.length() > 0) {
+                storeFile signingKeyFile
+                storePassword System.getenv("KEY_STORE_PASSWORD") ?: System.getenv("SIGNING_KEY_PASSWORD") ?: ""
+                keyAlias System.getenv("ALIAS") ?: "key0"
+                keyPassword System.getenv("KEY_PASSWORD") ?: System.getenv("SIGNING_KEY_PASSWORD") ?: ""
+            } else if (keystoreProperties.size() > 0) {
+                storeFile rootProject.file(keystoreProperties.getProperty("storeFile") ?: "keystore.jks")
+                storePassword keystoreProperties.getProperty("storePassword") ?: ""
+                keyAlias keystoreProperties.getProperty("keyAlias") ?: ""
+                keyPassword keystoreProperties.getProperty("keyPassword") ?: ""
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            def hasSigningKey = (signingKeyFile.exists() && signingKeyFile.length() > 0) || (keystoreProperties.size() > 0 && keystorePropertiesFile.exists())
+            signingConfig hasSigningKey ? signingConfigs.release : signingConfigs.debug
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), rootProject.file("common/proguard-rules.pro")
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+        freeCompilerArgs = ["-Xcontext-receivers"]
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            if (output instanceof BaseVariantOutputImpl) {
+                output.outputFileName = "${fullPkgName}.apk"
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation project(":core")
+}
