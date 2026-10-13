@@ -4,8 +4,8 @@
     "pkg": "ani.dantotsu.extension.novel.annaarchive",
     "apk": "ani.dantotsu.extension.novel.annaarchive.apk",
     "lang": "all",
-    "code": 8,
-    "version": "1.8",
+    "code": 9,
+    "version": "1.9",
     "nsfw": 0,
     "hasReadme": 0,
     "hasChangelog": 0,
@@ -14,7 +14,7 @@
         "name": "AnnasArchive",
         "lang": "all",
         "id": "4273510687828550053",
-        "baseUrl": "https://annas-archive.gl"
+        "baseUrl": "https://annas-archive.li"
       }
     ]
   },
@@ -23,8 +23,8 @@
     "pkg": "ani.dantotsu.extension.novel.libgen",
     "apk": "ani.dantotsu.extension.novel.libgen.apk",
     "lang": "all",
-    "code": 6,
-    "version": "1.6",
+    "code": 7,
+    "version": "1.7",
     "nsfw": 0,
     "hasReadme": 0,
     "hasChangelog": 0,
@@ -33,7 +33,7 @@
         "name": "Libgen",
         "lang": "all",
         "id": "0510365478052738285",
-        "baseUrl": "https://libgen.la"
+        "baseUrl": "https://libgen.im"
       }
     ]
   }

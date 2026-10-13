@@ -76,7 +76,7 @@ private class BypassRunnable(
 
 object WebViewResolver {
 
-    private const val DEFAULT_TIMEOUT_SECONDS = 30L
+    private const val DEFAULT_TIMEOUT_SECONDS = 8L
 
     fun getCookies(url: String): String {
         return try {
@@ -122,14 +122,14 @@ object WebViewResolver {
         }
 
         val response = try {
-            client.get(url, headers = reqHeaders)
+            SafeHttp.get(client, url, reqHeaders)
         } catch (e: Exception) {
             val msg = e.message.orEmpty().lowercase()
             if (msg.contains("403") || msg.contains("ddos-guard") || msg.contains("cloudflare")) {
                 val resolvedCookies = resolve(url, userAgent)
                 if (resolvedCookies.isNotBlank()) {
                     reqHeaders["Cookie"] = resolvedCookies
-                    return client.get(url, headers = reqHeaders)
+                    return SafeHttp.get(client, url, reqHeaders)
                 }
             }
             throw e
@@ -143,7 +143,7 @@ object WebViewResolver {
                 val resolvedCookies = resolve(url, userAgent)
                 if (resolvedCookies.isNotBlank()) {
                     reqHeaders["Cookie"] = resolvedCookies
-                    return client.get(url, headers = reqHeaders)
+                    return SafeHttp.get(client, url, reqHeaders)
                 }
             }
         }

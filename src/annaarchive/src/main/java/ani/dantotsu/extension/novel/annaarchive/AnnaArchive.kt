@@ -10,6 +10,11 @@ import androidx.preference.ListPreference
 import androidx.preference.PreferenceScreen
 import com.lagradost.nicehttp.NiceResponse
 import com.lagradost.nicehttp.Requests
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withTimeout
 import org.jsoup.nodes.Element
 
 @Suppress("unused")
@@ -20,11 +25,12 @@ class AnnaArchive : NovelInterface, ConfigurableNovelSource {
 
     // Official active mirrors and proxies
     private val mirrors = listOf(
+        "https://annas-archive.li",
+        "https://annas-archive.se",
+        "https://annas-archive.org",
         "https://annas-archive.gl",
         "https://annas-archive.pk",
-        "https://annas-archive.gd",
-        "https://annas-archive.se",
-        "https://annas-archive.li"
+        "https://annas-archive.gd"
     )
 
     private var currentHost = mirrors[0]
@@ -86,7 +92,9 @@ class AnnaArchive : NovelInterface, ConfigurableNovelSource {
         for (mirror in getActiveMirrors()) {
             try {
                 val fullUrl = "$mirror$path"
-                val res = WebViewResolver.getWithBypass(fullUrl, defaultHeaders, client, userAgent)
+                val res = withTimeout(7000L) {
+                    WebViewResolver.getWithBypass(fullUrl, defaultHeaders, client, userAgent)
+                }
                 if (res.isSuccessful) {
                     currentHost = mirror
                     return res
@@ -220,13 +228,18 @@ class AnnaArchive : NovelInterface, ConfigurableNovelSource {
 
         val fileUrls = mutableListOf<FileUrl>()
 
-        for (anchor in downloadAnchors) {
-            val rawHref = anchor.attr("href")
-            val resolvedLinks = LinkExtractor(rawHref, currentHost, client).extractLinks()
-            for ((serverLabel, resolvedUrl) in resolvedLinks) {
-                if (fileUrls.none { it.url == resolvedUrl }) {
-                    fileUrls.add(FileUrl(resolvedUrl, mapOf("X-Chapter-Name" to serverLabel)))
+        val resolvedPairs = coroutineScope {
+            downloadAnchors.map { anchor ->
+                async(Dispatchers.IO) {
+                    val rawHref = anchor.attr("href")
+                    LinkExtractor(rawHref, currentHost, client).extractLinks()
                 }
+            }.awaitAll().flatten()
+        }
+
+        for ((serverLabel, resolvedUrl) in resolvedPairs) {
+            if (fileUrls.none { it.url == resolvedUrl }) {
+                fileUrls.add(FileUrl(resolvedUrl, mapOf("X-Chapter-Name" to serverLabel)))
             }
         }
 
@@ -255,7 +268,7 @@ class AnnaArchive : NovelInterface, ConfigurableNovelSource {
 
         private suspend fun extractLibraryLol(url: String): List<Pair<String, String>> {
             return try {
-                val res = client.get(url)
+                val res = ani.dantotsu.parsers.SafeHttp.get(client, url)
                 val directA = res.document.selectFirst("div#download a[href]")
                 val directUrl = directA?.attr("href")
                 if (!directUrl.isNullOrBlank() && !directUrl.contains("localhost")) {
@@ -270,7 +283,7 @@ class AnnaArchive : NovelInterface, ConfigurableNovelSource {
 
         private suspend fun extractLibgen(url: String): List<Pair<String, String>> {
             return try {
-                val res = client.get(url)
+                val res = ani.dantotsu.parsers.SafeHttp.get(client, url)
                 val doc = res.document
                 val directLink = doc.selectFirst("table#main a[href*=.php]")?.attr("href")
                     ?: doc.selectFirst("div#download a[href]")?.attr("href")
@@ -288,7 +301,7 @@ class AnnaArchive : NovelInterface, ConfigurableNovelSource {
 
         private suspend fun extractSlowDownload(url: String): List<Pair<String, String>> {
             return try {
-                val res = client.get(url)
+                val res = ani.dantotsu.parsers.SafeHttp.get(client, url)
                 val doc = res.document
                 val downloadLink = doc.select("a[href]").mapNotNull { it.attr("href") }
                     .firstOrNull { it.contains("download") && !it.contains("localhost") && !it.contains("annas-archive") }

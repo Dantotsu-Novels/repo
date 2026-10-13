@@ -9,6 +9,11 @@ import androidx.preference.ListPreference
 import androidx.preference.PreferenceScreen
 import com.lagradost.nicehttp.NiceResponse
 import com.lagradost.nicehttp.Requests
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withTimeout
 import org.jsoup.nodes.Element
 
 @Suppress("unused")
@@ -19,10 +24,10 @@ class Libgen : NovelInterface, ConfigurableNovelSource {
 
     // Active mirrors tested and maintained
     private val mirrors = listOf(
+        "https://libgen.im",
         "https://libgen.la",
         "https://libgen.bz",
         "https://libgen.gl",
-        "https://libgen.im",
         "https://libgen.is",
         "https://libgen.rs"
     )
@@ -80,7 +85,9 @@ class Libgen : NovelInterface, ConfigurableNovelSource {
         for (mirror in getActiveMirrors()) {
             try {
                 val fullUrl = "$mirror$path"
-                val res = ani.dantotsu.parsers.WebViewResolver.getWithBypass(fullUrl, defaultHeaders, client, defaultHeaders["User-Agent"] ?: "")
+                val res = withTimeout(7000L) {
+                    ani.dantotsu.parsers.WebViewResolver.getWithBypass(fullUrl, defaultHeaders, client, defaultHeaders["User-Agent"] ?: "")
+                }
                 if (res.isSuccessful) {
                     currentHost = mirror
                     return res
@@ -219,14 +226,22 @@ class Libgen : NovelInterface, ConfigurableNovelSource {
         val fileUrls = mutableListOf<FileUrl>()
 
         // 1. Check if direct mirrors were cached in extra metadata
-        extra?.filterKeys { it.startsWith("mirror_") }?.values?.forEach { valStr ->
-            val parts = valStr.split("|", limit = 2)
-            val label = parts.getOrNull(0) ?: "Mirror"
-            val mUrl = parts.getOrNull(1) ?: return@forEach
-            val resolved = LinkExtractor(mUrl, currentHost, client).extractLinks()
-            for ((srv, resUrl) in resolved) {
+        val extraMirrors = extra?.filterKeys { it.startsWith("mirror_") }?.values.orEmpty()
+        if (extraMirrors.isNotEmpty()) {
+            val resolvedList = coroutineScope {
+                extraMirrors.map { valStr ->
+                    async(Dispatchers.IO) {
+                        val parts = valStr.split("|", limit = 2)
+                        val label = parts.getOrNull(0) ?: "Mirror"
+                        val mUrl = parts.getOrNull(1) ?: return@async emptyList<Pair<String, String>>()
+                        val resolved = LinkExtractor(mUrl, currentHost, client).extractLinks()
+                        resolved.map { (srv, resUrl) -> "$label ($srv)" to resUrl }
+                    }
+                }.awaitAll().flatten()
+            }
+            for ((chapterName, resUrl) in resolvedList) {
                 if (fileUrls.none { it.url == resUrl }) {
-                    fileUrls.add(FileUrl(resUrl, mapOf("X-Chapter-Name" to "$label ($srv)")))
+                    fileUrls.add(FileUrl(resUrl, mapOf("X-Chapter-Name" to chapterName)))
                 }
             }
         }
@@ -261,12 +276,17 @@ class Libgen : NovelInterface, ConfigurableNovelSource {
                             !ln.contains("torrent")
                 }
 
-            for (mLink in mirrorLinks) {
-                val resolved = LinkExtractor(mLink, currentHost, client).extractLinks()
-                for ((srv, resUrl) in resolved) {
-                    if (fileUrls.none { it.url == resUrl }) {
-                        fileUrls.add(FileUrl(resUrl, mapOf("X-Chapter-Name" to srv)))
+            val resolvedLinks = coroutineScope {
+                mirrorLinks.map { mLink ->
+                    async(Dispatchers.IO) {
+                        LinkExtractor(mLink, currentHost, client).extractLinks()
                     }
+                }.awaitAll().flatten()
+            }
+
+            for ((srv, resUrl) in resolvedLinks) {
+                if (fileUrls.none { it.url == resUrl }) {
+                    fileUrls.add(FileUrl(resUrl, mapOf("X-Chapter-Name" to srv)))
                 }
             }
         } catch (_: Exception) {
@@ -300,7 +320,7 @@ class Libgen : NovelInterface, ConfigurableNovelSource {
 
         private suspend fun extractLibraryLol(url: String): List<Pair<String, String>> {
             return try {
-                val res = client.get(url)
+                val res = ani.dantotsu.parsers.SafeHttp.get(client, url)
                 val directA = res.document.selectFirst("div#download a[href]")
                 val directUrl = directA?.attr("href")
                 if (!directUrl.isNullOrBlank() && !directUrl.contains("localhost")) {
@@ -316,7 +336,7 @@ class Libgen : NovelInterface, ConfigurableNovelSource {
         private suspend fun extractGetPhp(url: String): List<Pair<String, String>> {
             return try {
                 if (url.contains("ads.php")) {
-                    val res = client.get(url)
+                    val res = ani.dantotsu.parsers.SafeHttp.get(client, url)
                     val directA = res.document.selectFirst("table#main a[href*=.php]")
                         ?: res.document.selectFirst("div#download a[href]")
                     val directUrl = directA?.attr("href")
