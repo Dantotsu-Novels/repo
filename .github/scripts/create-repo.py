@@ -24,16 +24,16 @@ REPO_DIR.mkdir(parents=True, exist_ok=True)
 REPO_APK_DIR.mkdir(parents=True, exist_ok=True)
 REPO_ICON_DIR.mkdir(parents=True, exist_ok=True)
 
-VALID_PACKAGES = {"some.random.novels", "some.random.libgen"}
+VALID_PACKAGES = {"ani.dantotsu.extension.novel.annaarchive", "ani.dantotsu.extension.novel.libgen"}
 
 SOURCES_DATA = {
-    "some.random.novels": {
+    "ani.dantotsu.extension.novel.annaarchive": {
         "name": "AnnasArchive",
         "lang": "all",
         "id": "4273510687828550053",
         "baseUrl": "https://annas-archive.gl"
     },
-    "some.random.libgen": {
+    "ani.dantotsu.extension.novel.libgen": {
         "name": "Libgen",
         "lang": "all",
         "id": "0510365478052738285",
@@ -42,8 +42,8 @@ SOURCES_DATA = {
 }
 
 DEFAULT_METAS = {
-    "some.random.novels": {"name": "AnnaArchive", "code": 8, "version": "1.8", "module": "annaarchive"},
-    "some.random.libgen": {"name": "Libgen", "code": 6, "version": "1.6", "module": "libgen"}
+    "ani.dantotsu.extension.novel.annaarchive": {"name": "AnnaArchive", "code": 8, "version": "1.8", "module": "annaarchive"},
+    "ani.dantotsu.extension.novel.libgen": {"name": "Libgen", "code": 6, "version": "1.6", "module": "libgen"}
 }
 
 def find_aapt() -> Path | None:

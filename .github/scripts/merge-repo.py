@@ -7,7 +7,7 @@ import sys
 REMOTE_REPO = Path.cwd()
 LOCAL_REPO = Path(sys.argv[2]) if len(sys.argv) > 2 else REMOTE_REPO
 
-VALID_PACKAGES = {"some.random.novels", "some.random.libgen"}
+VALID_PACKAGES = {"ani.dantotsu.extension.novel.annaarchive", "ani.dantotsu.extension.novel.libgen"}
 
 # Copy new APKs, icons, and repo.json
 if (LOCAL_REPO / "apk").exists():

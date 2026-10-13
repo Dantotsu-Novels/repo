@@ -44,8 +44,8 @@ To browse and install novel extensions directly inside **Dantotsu**:
 
 | Extension | Package | Version | Mirrors / Base URL | Status |
 |---|---|---|---|---|
-| **Anna's Archive** | `some.random.novels` | `1.8` | `annas-archive.gl`, `annas-archive.pk`, `annas-archive.gd` | 🟢 Active |
-| **Libgen** | `some.random.libgen` | `1.6` | `libgen.la`, `libgen.bz`, `libgen.gl`, `libgen.im` | 🟢 Active |
+| **Anna's Archive** | `ani.dantotsu.extension.novel.annaarchive` | `1.8` | `annas-archive.gl`, `annas-archive.pk`, `annas-archive.gd` | 🟢 Active |
+| **Libgen** | `ani.dantotsu.extension.novel.libgen` | `1.6` | `libgen.la`, `libgen.bz`, `libgen.gl`, `libgen.im` | 🟢 Active |
 
 ---
 
@@ -53,9 +53,8 @@ To browse and install novel extensions directly inside **Dantotsu**:
 
 Novel extensions are lightweight APK packages that Dantotsu loads dynamically using Android reflection and `PathClassLoader`:
 
-* **Package Identifier**: Must begin with `some.random` (e.g. `some.random.<name>`).
-* **Extension Class**: Derives its class path from the application label:  
-  `some.random.novelextensions.<label_lowercase>.<label>`
+* **Package Identifier**: `ani.dantotsu.extension.novel.<name>` (e.g. `ani.dantotsu.extension.novel.annaarchive`).
+* **Extension Class**: `ani.dantotsu.extension.novel.<name>.<Name>` implementing `ani.dantotsu.parsers.NovelInterface`:
 * **Interface**: Implements `ani.dantotsu.parsers.NovelInterface`:
   ```kotlin
   interface NovelInterface {
