@@ -1,7 +1,7 @@
 ext {
     extName = 'AnnaArchive'
-    extVersionName = '1.9'
-    extVersionCode = 9
+    extVersionName = '1.10'
+    extVersionCode = 10
     extSuffix = 'annaarchive'
 }
 

@@ -80,7 +80,7 @@ class AnnaArchive : NovelInterface, ConfigurableNovelSource {
         }
     }
 
-    private suspend fun fetchWithMirrorFallback(pathOrUrl: String, client: Requests): NiceResponse {
+    private suspend fun fetchWithMirrorFallback(pathOrUrl: String, client: Requests): ani.dantotsu.parsers.SafeResponse {
         val path = if (pathOrUrl.startsWith("http")) {
             val stripped = pathOrUrl.replace(Regex("^https?://[^/]+"), "")
             if (stripped.isBlank()) "/" else stripped

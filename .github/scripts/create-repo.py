@@ -42,8 +42,8 @@ SOURCES_DATA = {
 }
 
 DEFAULT_METAS = {
-    "ani.dantotsu.extension.novel.annaarchive": {"name": "AnnaArchive", "code": 8, "version": "1.8", "module": "annaarchive"},
-    "ani.dantotsu.extension.novel.libgen": {"name": "Libgen", "code": 6, "version": "1.6", "module": "libgen"}
+    "ani.dantotsu.extension.novel.annaarchive": {"name": "AnnaArchive", "code": 10, "version": "1.10", "module": "annaarchive"},
+    "ani.dantotsu.extension.novel.libgen": {"name": "Libgen", "code": 8, "version": "1.8", "module": "libgen"}
 }
 
 def find_aapt() -> Path | None:

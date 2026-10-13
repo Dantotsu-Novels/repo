@@ -114,7 +114,7 @@ object WebViewResolver {
         headers: Map<String, String>,
         client: Requests,
         userAgent: String
-    ): NiceResponse {
+    ): SafeResponse {
         val reqHeaders = headers.toMutableMap()
         val existingCookies = getCookies(url)
         if (existingCookies.isNotBlank() && !reqHeaders.containsKey("Cookie")) {

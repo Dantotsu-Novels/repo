@@ -1,14 +1,24 @@
 package ani.dantotsu.parsers
 
-import com.lagradost.nicehttp.NiceResponse
-import com.lagradost.nicehttp.Requests
-import com.lagradost.nicehttp.ResponseParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import java.util.concurrent.TimeUnit
-import kotlin.reflect.KClass
+
+class SafeResponse(
+    val code: Int,
+    val isSuccessful: Boolean,
+    val text: String,
+    val url: String,
+    val headers: Map<String, String> = emptyMap()
+) {
+    val document: Document by lazy {
+        Jsoup.parse(text, url)
+    }
+}
 
 object SafeHttp {
 
@@ -21,22 +31,20 @@ object SafeHttp {
             .build()
     }
 
-    private val defaultParser: ResponseParser = object : ResponseParser {
-        override fun <T : Any> parse(text: String, kClass: KClass<T>): T =
-            throw UnsupportedOperationException("JSON parsing not supported by fallback parser")
-
-        override fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T? = null
-
-        override fun writeValueAsString(obj: Any): String = ""
-    }
-
     suspend fun get(
-        client: Requests?,
+        client: Any?,
         url: String,
         headers: Map<String, String> = emptyMap()
-    ): NiceResponse = withContext(Dispatchers.IO) {
+    ): SafeResponse = withContext(Dispatchers.IO) {
         val okClient: OkHttpClient = try {
-            client?.baseClient ?: defaultClient
+            if (client != null) {
+                val method = client.javaClass.methods.firstOrNull { 
+                    it.name == "getBaseClient" || it.name == "getOkHttpClient" 
+                }
+                (method?.invoke(client) as? OkHttpClient) ?: defaultClient
+            } else {
+                defaultClient
+            }
         } catch (_: Throwable) {
             defaultClient
         }
@@ -47,12 +55,15 @@ object SafeHttp {
         }
 
         val response = okClient.newCall(reqBuilder.build()).execute()
-        val parser: ResponseParser = try {
-            client?.responseParser ?: defaultParser
-        } catch (_: Throwable) {
-            defaultParser
+        val code = response.code
+        val isSuccessful = response.isSuccessful
+        val bodyText = response.body?.string().orEmpty()
+        val finalUrl = response.request.url.toString()
+        val respHeaders = mutableMapOf<String, String>()
+        for (i in 0 until response.headers.size) {
+            respHeaders[response.headers.name(i)] = response.headers.value(i)
         }
 
-        NiceResponse(response, parser)
+        SafeResponse(code, isSuccessful, bodyText, finalUrl, respHeaders)
     }
 }
