@@ -8,7 +8,7 @@ def extName = project.findProperty("extName")
 def extVersionName = project.findProperty("extVersionName")
 def extVersionCode = (project.findProperty("extVersionCode") ?: 1) as Integer
 def extSuffix = project.findProperty("extSuffix")
-def fullPkgName = "some.random.${extSuffix}"
+def fullPkgName = "ani.dantotsu.extension.novel.${extSuffix}"
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
@@ -19,7 +19,7 @@ if (keystorePropertiesFile.exists()) {
 def signingKeyFile = rootProject.file("signingkey.jks")
 
 android {
-    namespace 'some.random'
+    namespace 'ani.dantotsu.extension.novel'
     compileSdk 35
 
     sourceSets {

@@ -10,6 +10,7 @@ PACKAGE_NAME_REGEX = re.compile(r"package: name='([^']+)'")
 VERSION_CODE_REGEX = re.compile(r"versionCode='([^']+)'")
 VERSION_NAME_REGEX = re.compile(r"versionName='([^']+)'")
 APPLICATION_LABEL_REGEX = re.compile(r"^application-label:'([^']+)'", re.MULTILINE)
+# Match webp, png, or any image path from aapt
 APPLICATION_ICON_REGEX = re.compile(r"^application-icon-(?:320|480|640|160):'([^']+)'", re.MULTILINE)
 
 REPO_DIR = Path("repo")
@@ -22,13 +23,13 @@ REPO_ICON_DIR.mkdir(parents=True, exist_ok=True)
 
 # Extension source definitions for Dantotsu novel extensions
 SOURCES_DATA = {
-    "some.random.novels": {
+    "ani.dantotsu.extension.novel.annaarchive": {
         "name": "AnnasArchive",
         "lang": "all",
         "id": "4273510687828550053",
         "baseUrl": "https://annas-archive.gl"
     },
-    "some.random.libgen": {
+    "ani.dantotsu.extension.novel.libgen": {
         "name": "Libgen",
         "lang": "all",
         "id": "0510365478052738285",
@@ -37,8 +38,8 @@ SOURCES_DATA = {
 }
 
 DEFAULT_METAS = {
-    "some.random.novels": {"name": "AnnaArchive", "code": 7, "version": "1.7"},
-    "some.random.libgen": {"name": "Libgen", "code": 5, "version": "1.5"}
+    "ani.dantotsu.extension.novel.annaarchive": {"name": "AnnaArchive", "code": 8, "version": "1.8"},
+    "ani.dantotsu.extension.novel.libgen": {"name": "Libgen", "code": 6, "version": "1.6"}
 }
 
 def find_aapt() -> Path | None:
@@ -52,6 +53,18 @@ def find_aapt() -> Path | None:
                     return aapt
     which_aapt = shutil.which("aapt")
     return Path(which_aapt) if which_aapt else None
+
+def extract_icon(apk: Path, icon_path: str, pkg_name: str) -> None:
+    """Extract icon from APK, preserving the real format (.webp or .png)."""
+    ext = Path(icon_path).suffix.lower() or ".png"
+    out_path = REPO_ICON_DIR / f"{pkg_name}{ext}"
+    try:
+        with ZipFile(apk) as z, z.open(icon_path) as src_icon:
+            with out_path.open("wb") as dst_icon:
+                dst_icon.write(src_icon.read())
+        print(f"Extracted icon: {icon_path} -> {out_path}")
+    except Exception as e:
+        print(f"Could not extract icon from {apk}: {e}")
 
 aapt_path = find_aapt()
 index_data = []
@@ -71,6 +84,7 @@ for apk in REPO_APK_DIR.glob("*.apk"):
     label = DEFAULT_METAS.get(pkg_name, {}).get("name", pkg_name.split(".")[-1].capitalize())
     code = DEFAULT_METAS.get(pkg_name, {}).get("code", 1)
     version = DEFAULT_METAS.get(pkg_name, {}).get("version", "1.0")
+    icon_filename = None
 
     if aapt_path:
         try:
@@ -93,15 +107,20 @@ for apk in REPO_APK_DIR.glob("*.apk"):
 
             icon_m = APPLICATION_ICON_REGEX.search(badging)
             if icon_m:
-                icon_path = icon_m.group(1)
-                try:
-                    with ZipFile(apk) as z, z.open(icon_path) as src_icon:
-                        with (REPO_ICON_DIR / f"{pkg_name}.png").open("wb") as dst_icon:
-                            dst_icon.write(src_icon.read())
-                except Exception as e:
-                    print(f"Could not extract icon from {apk}: {e}")
+                icon_path_in_apk = icon_m.group(1)
+                extract_icon(apk, icon_path_in_apk, pkg_name)
+                ext = Path(icon_path_in_apk).suffix.lower() or ".png"
+                icon_filename = f"{pkg_name}{ext}"
         except Exception as e:
             print(f"aapt dump failed for {apk}: {e}")
+
+    # Fallback: check if we already have an icon file for this package
+    if icon_filename is None:
+        for ext in [".webp", ".png"]:
+            candidate = REPO_ICON_DIR / f"{pkg_name}{ext}"
+            if candidate.exists():
+                icon_filename = candidate.name
+                break
 
     sources_list = []
     if pkg_name in SOURCES_DATA:
@@ -126,6 +145,8 @@ for apk in REPO_APK_DIR.glob("*.apk"):
         "hasChangelog": 0,
         "sources": sources_list
     }
+    if icon_filename:
+        entry["icon"] = icon_filename
     existing_index[pkg_name] = entry
 
 index_data = list(existing_index.values())

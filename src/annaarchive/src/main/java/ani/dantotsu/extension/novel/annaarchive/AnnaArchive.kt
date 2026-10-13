@@ -1,4 +1,4 @@
-package some.random.novelextensions.annaarchive
+package ani.dantotsu.extension.novel.annaarchive
 
 import ani.dantotsu.parsers.Book
 import ani.dantotsu.parsers.FileUrl

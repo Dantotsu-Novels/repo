@@ -1,7 +1,7 @@
 ext {
     extName = 'Libgen'
-    extVersionName = '1.5'
-    extVersionCode = 5
+    extVersionName = '1.6'
+    extVersionCode = 6
     extSuffix = 'libgen'
 }
 
