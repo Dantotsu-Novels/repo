@@ -1,117 +1,85 @@
-# Dantotsu Novel Extensions
+<div align="center">
+  <img src="https://files.catbox.moe/s3mwfr.png" alt="Dantotsu Banner" width="830">
 
-<p align="center">
-  <img src="https://files.catbox.moe/s3mwfr.png" alt="Dantotsu" />
-</p>
+  <p align="center">
+    <img src="https://img.shields.io/badge/platforms-Android%208.0%2B-06599d?labelColor=7000b7&color=1b1c2a&style=for-the-badge" alt="Platforms" />
+    <a href="https://github.com/Dantotsu-Novels/repo/actions/workflows/build_push.yml"><img src="https://img.shields.io/github/actions/workflow/status/Dantotsu-Novels/repo/build_push.yml?branch=repo&label=CI&style=for-the-badge&color=1b1c2a&labelColor=7000b7" alt="CI Status" /></a>
+    <a href="https://github.com/Dantotsu-Novels/repo/tree/repo"><img src="https://img.shields.io/badge/branch-repo-1b1c2a?style=for-the-badge&labelColor=7000b7" alt="Repo Branch" /></a>
+    <a href="https://github.com/Dantotsu-Novels/repo/stargazers"><img src="https://img.shields.io/github/stars/Dantotsu-Novels/repo?style=for-the-badge&labelColor=7000b7&color=1b1c2a" alt="Stars" /></a>
+  </p>
+</div>
 
-<p align="center">
-  Official community repository for Dantotsu Novel Extensions.
-</p>
+# Dannovels: Dantotsu Novel Extensions Repository
 
-<p align="center">
-  <a href="https://github.com/Dantotsu-Novels/repo/actions/workflows/build_push.yml">
-    <img src="https://github.com/Dantotsu-Novels/repo/actions/workflows/build_push.yml/badge.svg" alt="CI Status" />
-  </a>
-  <a href="https://github.com/Dantotsu-Novels/repo/tree/repo">
-    <img src="https://img.shields.io/badge/branch-repo-blue.svg" alt="Repo Branch" />
-  </a>
-  <a href="https://github.com/Dantotsu-Novels/repo/stargazers">
-    <img src="https://img.shields.io/github/stars/Dantotsu-Novels/repo?style=flat&color=yellow" alt="Stars" />
-  </a>
-</p>
+Official community extension repository providing novel sources for the Dantotsu novel reader.
 
----
+> [!IMPORTANT]
+> **Dannovels is an extension repository only.** It does not host, store, stream, or distribute any books, novels, or media files. All extensions are independent scrapers that fetch metadata and links directly from public third-party websites at runtime.
+>
+> **User Responsibility:** By adding this repository or installing its extensions, you agree to use them in compliance with all applicable copyright and intellectual property laws.
+>
+> **No Liability:** The developers and maintainers of Dannovels are not responsible for content hosted on third-party domains, website availability, or end-user actions. All inquiries regarding content should be directed to the third-party providers.
 
-## 📖 Usage
+## Repository Setup
 
-### Adding the Repository to Dantotsu
-
-To browse and install novel extensions directly inside **Dantotsu**:
+To browse, install, and update novel extensions directly within Dantotsu:
 
 1. Open **Dantotsu**.
-2. Navigate to **More** (or **Settings**) → **Extensions** → **Novel Extensions**.
+2. Navigate to **More** (or **Settings**) > **Extensions** > **Novel Extensions**.
 3. Tap **Add Repository** (or the **+** button).
-4. Paste the following repository URL:
+4. Enter the repository URL:
    ```text
    https://raw.githubusercontent.com/Dantotsu-Novels/repo/repo/index.json
    ```
-   *(or simply `https://github.com/Dantotsu-Novels/repo`)*
-5. Tap **Add**. The novel extensions will appear under the Available tab ready to install.
+5. Tap **Add**. Extensions will appear in the Available tab ready to install.
 
----
+## Available Extensions
 
-## 📚 Available Extensions
+| Extension | Package | Version | Default Mirrors | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Anna's Archive** | `ani.dantotsu.extension.novel.annaarchive` | `1.10` | `annas-archive.li`, `annas-archive.gl`, `annas-archive.pk` | Active |
+| **Libgen** | `ani.dantotsu.extension.novel.libgen` | `1.8` | `libgen.im`, `libgen.la`, `libgen.is`, `libgen.rs` | Active |
 
-| Extension | Package | Version | Mirrors / Base URL | Status |
-|---|---|---|---|---|
-| **Anna's Archive** | `ani.dantotsu.extension.novel.annaarchive` | `1.8` | `annas-archive.gl`, `annas-archive.pk`, `annas-archive.gd` | 🟢 Active |
-| **Libgen** | `ani.dantotsu.extension.novel.libgen` | `1.6` | `libgen.la`, `libgen.bz`, `libgen.gl`, `libgen.im` | 🟢 Active |
+## Extension Architecture
 
----
+Novel extensions are modular Android packages loaded dynamically by Dantotsu's novel engine:
 
-## 🛠️ How Novel Extensions Work in Dantotsu
-
-Novel extensions are lightweight APK packages that Dantotsu loads dynamically using Android reflection and `PathClassLoader`:
-
-* **Package Identifier**: `ani.dantotsu.extension.novel.<name>` (e.g. `ani.dantotsu.extension.novel.annaarchive`).
-* **Extension Class**: `ani.dantotsu.extension.novel.<name>.<Name>` implementing `ani.dantotsu.parsers.NovelInterface`:
-* **Interface**: Implements `ani.dantotsu.parsers.NovelInterface`:
+- **Package Identifier:** `ani.dantotsu.extension.novel.<name>`
+- **Source Interface:** Each extension implements `ani.dantotsu.parsers.NovelInterface`:
   ```kotlin
   interface NovelInterface {
       suspend fun search(query: String, client: Requests): List<ShowResponse>
       suspend fun loadBook(link: String, extra: Map<String, String>?, client: Requests): Book
   }
   ```
-* **Download Flow**: When a reader opens a book, Dantotsu resolves the direct EPUB link and downloads it into the native novel reader engine.
+- **Configuration:** Sources implementing `ConfigurableNovelSource` expose mirror selection and preferences directly inside Dantotsu's extension settings.
+- **Reading Flow:** Dantotsu searches titles, resolves direct download endpoints via the extension, and opens books inside the native reader engine.
 
----
+## Contributing
 
-## 💻 Contributing
+Contributions of new novel sources and fixes are welcome.
 
-Contributions and new novel sources are welcome!
-
-### Creating a New Extension
-
-1. Fork this repository and clone it locally.
-2. In the `src/` directory, create a new folder for your extension (e.g. `src/mysource`).
-3. Set up the `build.gradle.kts`:
-   ```kotlin
-   extra["extName"] = "MySource"
-   extra["extVersionName"] = "1.0"
-   extra["extVersionCode"] = 1
-   extra["extSuffix"] = "mysource"
-
-   apply(from = rootProject.file("common.gradle"))
+### Adding a New Source
+1. Fork and clone this repository.
+2. In the `src/` directory, create your extension module (e.g. `src/mysource/`).
+3. Set up `build.gradle`:
+   ```groovy
+   ext {
+       extName = 'MySource'
+       extVersionName = '1.0'
+       extVersionCode = 1
+       extSuffix = 'mysource'
+   }
+   apply from: "$rootDir/common.gradle"
    ```
-4. Create `AndroidManifest.xml` with:
-   ```xml
-   <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-       <application android:label="MySource" android:icon="@mipmap/ic_launcher" />
-   </manifest>
-   ```
-5. Implement `some.random.novelextensions.mysource.MySource` implementing `NovelInterface`.
-6. Submit a Pull Request. CI will automatically verify and build the extension.
+4. Define `AndroidManifest.xml` with label and icon.
+5. Implement `NovelInterface` in package `ani.dantotsu.extension.novel.mysource`.
+6. Submit a Pull Request. CI will verify and compile the APK automatically.
 
----
+## Visitors
 
-## 🤖 Automated Version Bumping & CI/CD
+<img src="https://count.getloli.com/get/@:dannovels" alt=":dannovels" />
 
-This repository features an automated CI/CD pipeline modeled after **Yuzuno** and **Keiyoushi**:
+## License
 
-* **Auto-Bumping (`bump-versions.py`)**: When `core/` or `common/` library code is updated, all dependent extensions automatically have their version code incremented.
-* **Parallel Build Chunks**: Compiles extensions in matrix chunks on GitHub Actions runners.
-* **Continuous Publishing**: Automatically packages release APKs, extracts app icons, and generates `index.json` and `index.min.json` on the `repo` branch.
-
----
-
-## ⚖️ License & Disclaimer
-
-```text
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-```
-
-* **Disclaimer**: This project does not host any media content. All content is fetched live from public third-party services. The authors are not affiliated with any content providers or Dantotsu core maintainers.
+Dannovels is licensed under the Unabandon Public License (UPL). More info can be found [here](LICENSE.md).
