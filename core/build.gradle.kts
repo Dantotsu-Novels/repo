@@ -26,6 +26,7 @@ kotlin {
 
 dependencies {
     api(libs.bundles.common)
+    api("androidx.preference:preference-ktx:1.2.1")
     // jsoup's public API is annotated with JSpecify; Kotlin needs it on the classpath
     api("org.jspecify:jspecify:1.0.0")
     testImplementation(libs.junit)

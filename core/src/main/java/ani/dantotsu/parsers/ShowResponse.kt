@@ -1,6 +1,9 @@
 package ani.dantotsu.parsers
 
+import ani.dantotsu.FileUrl
 import java.io.Serializable
+
+typealias FileUrl = ani.dantotsu.FileUrl
 
 data class ShowResponse(
     val name: String,
@@ -32,15 +35,4 @@ data class ShowResponse(
 
     constructor(name: String, link: String, coverUrl: String)
             : this(name, link, FileUrl(coverUrl))
-}
-
-data class FileUrl(
-    val url: String,
-    val headers: Map<String, String> = mapOf()
-) : Serializable {
-    companion object {
-        operator fun get(url: String?, headers: Map<String, String> = mapOf()): FileUrl? {
-            return FileUrl(url ?: return null, headers)
-        }
-    }
 }

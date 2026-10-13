@@ -1,16 +1,19 @@
 package ani.dantotsu.extension.novel.annaarchive
 
+import ani.dantotsu.FileUrl
 import ani.dantotsu.parsers.Book
-import ani.dantotsu.parsers.FileUrl
+import ani.dantotsu.parsers.ConfigurableNovelSource
 import ani.dantotsu.parsers.NovelInterface
 import ani.dantotsu.parsers.ShowResponse
 import ani.dantotsu.parsers.WebViewResolver
+import androidx.preference.ListPreference
+import androidx.preference.PreferenceScreen
 import com.lagradost.nicehttp.NiceResponse
 import com.lagradost.nicehttp.Requests
 import org.jsoup.nodes.Element
 
 @Suppress("unused")
-class AnnaArchive : NovelInterface {
+class AnnaArchive : NovelInterface, ConfigurableNovelSource {
 
     val name = "Anna's Archive"
     val saveName = "anna"
@@ -41,6 +44,36 @@ class AnnaArchive : NovelInterface {
         "Sec-Fetch-User" to "?1"
     )
 
+    override fun setupPreferenceScreen(screen: PreferenceScreen) {
+        val context = screen.context
+        val mirrorPref = ListPreference(context).apply {
+            key = PREF_MIRROR_KEY
+            title = "Active Mirror / Base URL"
+            summary = "%s"
+            entries = mirrors.toTypedArray()
+            entryValues = mirrors.toTypedArray()
+            setDefaultValue(mirrors[0])
+            setOnPreferenceChangeListener { _, newValue ->
+                currentHost = newValue as String
+                true
+            }
+        }
+        screen.addPreference(mirrorPref)
+    }
+
+    private fun getActiveMirrors(): List<String> {
+        val prefMirror = try {
+            getSourcePreferences().getString(PREF_MIRROR_KEY, null)
+        } catch (_: Throwable) {
+            null
+        }
+        return if (!prefMirror.isNullOrBlank() && prefMirror in mirrors) {
+            listOf(prefMirror) + (mirrors - prefMirror)
+        } else {
+            mirrors
+        }
+    }
+
     private suspend fun fetchWithMirrorFallback(pathOrUrl: String, client: Requests): NiceResponse {
         val path = if (pathOrUrl.startsWith("http")) {
             val stripped = pathOrUrl.replace(Regex("^https?://[^/]+"), "")
@@ -50,7 +83,7 @@ class AnnaArchive : NovelInterface {
         }
 
         var lastException: Exception? = null
-        for (mirror in mirrors) {
+        for (mirror in getActiveMirrors()) {
             try {
                 val fullUrl = "$mirror$path"
                 val res = WebViewResolver.getWithBypass(fullUrl, defaultHeaders, client, userAgent)
@@ -287,5 +320,9 @@ class AnnaArchive : NovelInterface {
         }
         val remainingShows = sorted.flatten() - volumes.toSet()
         return volumes + remainingShows
+    }
+
+    companion object {
+        private const val PREF_MIRROR_KEY = "mirror_base_url"
     }
 }

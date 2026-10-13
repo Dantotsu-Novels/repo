@@ -15,3 +15,8 @@ keystore.properties
 
 __pycache__/
 *.pyc
+
+build/
+.gradle/
+local.properties
+

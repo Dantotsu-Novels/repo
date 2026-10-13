@@ -1,5 +1,6 @@
 package ani.dantotsu.parsers
 
+import ani.dantotsu.FileUrl
 import java.io.Serializable
 
 class NovelParser {
