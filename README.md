@@ -33,7 +33,7 @@ To browse and install novel extensions directly inside **Dantotsu**:
 3. Tap **Add Repository** (or the **+** button).
 4. Paste the following repository URL:
    ```text
-   https://raw.githubusercontent.com/Dantotsu-Novels/repo/repo/repo/index.json
+   https://raw.githubusercontent.com/Dantotsu-Novels/repo/repo/index.json
    ```
    *(or simply `https://github.com/Dantotsu-Novels/repo`)*
 5. Tap **Add**. The novel extensions will appear under the Available tab ready to install.
@@ -44,8 +44,8 @@ To browse and install novel extensions directly inside **Dantotsu**:
 
 | Extension | Package | Version | Mirrors / Base URL | Status |
 |---|---|---|---|---|
-| **Anna's Archive** | `some.random.novels` | `1.7` | `annas-archive.gl`, `annas-archive.pk`, `annas-archive.gd` | 🟢 Active |
-| **Libgen** | `some.random.libgen` | `1.5` | `libgen.la`, `libgen.bz`, `libgen.gl`, `libgen.im` | 🟢 Active |
+| **Anna's Archive** | `some.random.novels` | `1.8` | `annas-archive.gl`, `annas-archive.pk`, `annas-archive.gd` | 🟢 Active |
+| **Libgen** | `some.random.libgen` | `1.6` | `libgen.la`, `libgen.bz`, `libgen.gl`, `libgen.im` | 🟢 Active |
 
 ---
 

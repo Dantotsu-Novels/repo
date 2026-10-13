@@ -2,7 +2,7 @@ ext {
     extName = 'AnnaArchive'
     extVersionName = '1.8'
     extVersionCode = 8
-    extSuffix = 'annaarchive'
+    extSuffix = 'novels'
 }
 
 apply from: "$rootDir/common.gradle"

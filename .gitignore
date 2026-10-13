@@ -11,7 +11,7 @@ signingkey.jks
 keystore.properties
 *.apk
 !/repo/apk/*.apk
+!/apk/*.apk
 
 __pycache__/
 *.pyc
-
