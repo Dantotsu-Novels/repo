@@ -11,12 +11,33 @@
     "hasChangelog": 0,
     "sources": [
       {
+        "name": "AnnaArchive",
+        "lang": "all",
+        "id": "8376235784851213447",
+        "baseUrl": ""
+      }
+    ],
+    "icon": "some.random.novels.xml"
+  },
+  {
+    "name": "AnnaArchive",
+    "pkg": "ani.dantotsu.extension.novel.annaarchive",
+    "apk": "ani.dantotsu.extension.novel.annaarchive.apk",
+    "lang": "all",
+    "code": 8,
+    "version": "1.8",
+    "nsfw": 0,
+    "hasReadme": 0,
+    "hasChangelog": 0,
+    "sources": [
+      {
         "name": "AnnasArchive",
         "lang": "all",
         "id": "4273510687828550053",
         "baseUrl": "https://annas-archive.gl"
       }
-    ]
+    ],
+    "icon": "ani.dantotsu.extension.novel.annaarchive.xml"
   },
   {
     "name": "Libgen",
@@ -32,9 +53,30 @@
       {
         "name": "Libgen",
         "lang": "all",
+        "id": "4371451633303543403",
+        "baseUrl": ""
+      }
+    ],
+    "icon": "some.random.libgen.xml"
+  },
+  {
+    "name": "Libgen",
+    "pkg": "ani.dantotsu.extension.novel.libgen",
+    "apk": "ani.dantotsu.extension.novel.libgen.apk",
+    "lang": "all",
+    "code": 6,
+    "version": "1.6",
+    "nsfw": 0,
+    "hasReadme": 0,
+    "hasChangelog": 0,
+    "sources": [
+      {
+        "name": "Libgen",
+        "lang": "all",
         "id": "0510365478052738285",
         "baseUrl": "https://libgen.la"
       }
-    ]
+    ],
+    "icon": "ani.dantotsu.extension.novel.libgen.xml"
   }
 ]
