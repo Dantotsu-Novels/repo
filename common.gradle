@@ -29,6 +29,13 @@ android {
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
         }
+        test {
+            java.srcDirs = ['src/test/java']
+        }
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
     }
 
     defaultConfig {
@@ -93,4 +100,6 @@ android {
 
 dependencies {
     implementation project(":core")
+    testImplementation "junit:junit:4.13.2"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0"
 }

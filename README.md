@@ -74,7 +74,24 @@ Contributions of new novel sources and fixes are welcome.
    ```
 4. Define `AndroidManifest.xml` with label and icon.
 5. Implement `NovelInterface` in package `ani.dantotsu.extension.novel.mysource`.
-6. Submit a Pull Request. CI will verify and compile the APK automatically.
+6. Test your scraper locally using the built-in unit tests (see below).
+7. Submit a Pull Request. CI will verify and compile the APK automatically.
+
+### Testing Extensions Locally
+
+Each extension module includes an `ExtensionUnitTest` to quickly test search and link extraction directly on your workstation without needing an Android emulator or device:
+
+```bash
+# Run tests for a specific extension
+./gradlew :src:annaarchive:test
+./gradlew :src:libgen:test
+
+# Or run all unit tests
+./gradlew test
+```
+
+> [!NOTE]  
+> Extension unit tests run live network requests against endpoints for local verification and scraper debugging. Automated CI release builds (`assembleRelease`) compile the APKs without triggering live network tests to prevent runner IP rate limits.
 
 ## Visitors
 
