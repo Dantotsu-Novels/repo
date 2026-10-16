@@ -1,0 +1,8 @@
+ext {
+    extName = 'Calibre'
+    extVersionName = '1.0'
+    extVersionCode = 1
+    extSuffix = 'calibre'
+}
+
+apply from: "$rootDir/common.gradle"

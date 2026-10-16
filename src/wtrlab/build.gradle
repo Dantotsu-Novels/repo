@@ -1,0 +1,8 @@
+ext {
+    extName = 'WtrLab'
+    extVersionName = '1.0'
+    extVersionCode = 1
+    extSuffix = 'wtrlab'
+}
+
+apply from: "$rootDir/common.gradle"

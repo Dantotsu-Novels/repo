@@ -1,0 +1,8 @@
+ext {
+    extName = 'Quotev'
+    extVersionName = '1.0'
+    extVersionCode = 1
+    extSuffix = 'quotev'
+}
+
+apply from: "$rootDir/common.gradle"

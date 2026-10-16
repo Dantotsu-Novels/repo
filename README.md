@@ -33,13 +33,6 @@ To browse, install, and update novel extensions directly within Dantotsu:
    ```
 5. Tap **Add**. Extensions will appear in the Available tab ready to install.
 
-## Available Extensions
-
-| Extension | Package | Version | Default Mirrors | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| **Anna's Archive** | `ani.dantotsu.extension.novel.annaarchive` | `1.10` | `annas-archive.li`, `annas-archive.gl`, `annas-archive.pk` | Active |
-| **Libgen** | `ani.dantotsu.extension.novel.libgen` | `1.8` | `libgen.im`, `libgen.la`, `libgen.is`, `libgen.rs` | Active |
-
 ## Extension Architecture
 
 Novel extensions are modular Android packages loaded dynamically by Dantotsu's novel engine:
@@ -85,6 +78,7 @@ Each extension module includes an `ExtensionUnitTest` to quickly test search and
 # Run tests for a specific extension
 ./gradlew :src:annaarchive:test
 ./gradlew :src:libgen:test
+./gradlew :src:quotev:test
 
 # Or run all unit tests
 ./gradlew test

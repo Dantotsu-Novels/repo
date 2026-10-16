@@ -24,7 +24,13 @@ REPO_DIR.mkdir(parents=True, exist_ok=True)
 REPO_APK_DIR.mkdir(parents=True, exist_ok=True)
 REPO_ICON_DIR.mkdir(parents=True, exist_ok=True)
 
-VALID_PACKAGES = {"ani.dantotsu.extension.novel.annaarchive", "ani.dantotsu.extension.novel.libgen"}
+VALID_PACKAGES = {
+    "ani.dantotsu.extension.novel.annaarchive",
+    "ani.dantotsu.extension.novel.libgen",
+    "ani.dantotsu.extension.novel.calibre",
+    "ani.dantotsu.extension.novel.quotev",
+    "ani.dantotsu.extension.novel.wtrlab",
+}
 
 SOURCES_DATA = {
     "ani.dantotsu.extension.novel.annaarchive": {
@@ -38,12 +44,33 @@ SOURCES_DATA = {
         "lang": "all",
         "id": "0510365478052738285",
         "baseUrl": "https://libgen.la"
+    },
+    "ani.dantotsu.extension.novel.calibre": {
+        "name": "Calibre",
+        "lang": "all",
+        "id": "7182946102837461928",
+        "baseUrl": "http://127.0.0.1:8080"
+    },
+    "ani.dantotsu.extension.novel.quotev": {
+        "name": "Quotev",
+        "lang": "all",
+        "id": "3829104820194857201",
+        "baseUrl": "https://www.quotev.com"
+    },
+    "ani.dantotsu.extension.novel.wtrlab": {
+        "name": "WtrLab",
+        "lang": "all",
+        "id": "8472910482019482710",
+        "baseUrl": "https://wtr-lab.com"
     }
 }
 
 DEFAULT_METAS = {
     "ani.dantotsu.extension.novel.annaarchive": {"name": "AnnaArchive", "code": 10, "version": "1.10", "module": "annaarchive"},
-    "ani.dantotsu.extension.novel.libgen": {"name": "Libgen", "code": 8, "version": "1.8", "module": "libgen"}
+    "ani.dantotsu.extension.novel.libgen": {"name": "Libgen", "code": 8, "version": "1.8", "module": "libgen"},
+    "ani.dantotsu.extension.novel.calibre": {"name": "Calibre", "code": 1, "version": "1.0", "module": "calibre"},
+    "ani.dantotsu.extension.novel.quotev": {"name": "Quotev", "code": 1, "version": "1.0", "module": "quotev"},
+    "ani.dantotsu.extension.novel.wtrlab": {"name": "WtrLab", "code": 1, "version": "1.0", "module": "wtrlab"}
 }
 
 def find_aapt() -> Path | None:
