@@ -7,13 +7,27 @@ import sys
 REMOTE_REPO = Path.cwd()
 LOCAL_REPO = Path(sys.argv[2]) if len(sys.argv) > 2 else REMOTE_REPO
 
-VALID_PACKAGES = {
-    "ani.dantotsu.extension.novel.annaarchive",
-    "ani.dantotsu.extension.novel.libgen",
-    "ani.dantotsu.extension.novel.calibre",
-    "ani.dantotsu.extension.novel.quotev",
-    "ani.dantotsu.extension.novel.wtrlab",
-}
+def discover_valid_packages() -> set[str]:
+    pkgs = set()
+    src_dir = Path("src")
+    if src_dir.exists():
+        for mod in src_dir.iterdir():
+            bg = mod / "build.gradle"
+            if mod.is_dir() and bg.exists():
+                try:
+                    text = bg.read_text(encoding="utf-8", errors="ignore")
+                    m = __import__("re").search(r"extSuffix\s*=\s*['\"]([^'\"]+)['\"]", text)
+                    if m:
+                        pkgs.add(f"ani.dantotsu.extension.novel.{m.group(1)}")
+                except Exception:
+                    pass
+    for p in [LOCAL_REPO / "apk", REMOTE_REPO / "apk"]:
+        if p.exists():
+            for apk in p.glob("ani.dantotsu.extension.novel.*.apk"):
+                pkgs.add(apk.stem)
+    return pkgs
+
+VALID_PACKAGES = discover_valid_packages()
 
 # Copy new APKs, icons, and repo.json
 if (LOCAL_REPO / "apk").exists():

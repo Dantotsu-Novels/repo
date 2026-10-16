@@ -24,13 +24,40 @@ REPO_DIR.mkdir(parents=True, exist_ok=True)
 REPO_APK_DIR.mkdir(parents=True, exist_ok=True)
 REPO_ICON_DIR.mkdir(parents=True, exist_ok=True)
 
-VALID_PACKAGES = {
-    "ani.dantotsu.extension.novel.annaarchive",
-    "ani.dantotsu.extension.novel.libgen",
-    "ani.dantotsu.extension.novel.calibre",
-    "ani.dantotsu.extension.novel.quotev",
-    "ani.dantotsu.extension.novel.wtrlab",
-}
+def discover_modules() -> tuple[set[str], dict[str, dict]]:
+    pkgs = set()
+    metas = {}
+    src_dir = Path("src")
+    if src_dir.exists():
+        for mod in src_dir.iterdir():
+            bg = mod / "build.gradle"
+            if mod.is_dir() and bg.exists():
+                try:
+                    text = bg.read_text(encoding="utf-8", errors="ignore")
+                    suffix_m = re.search(r"extSuffix\s*=\s*['\"]([^'\"]+)['\"]", text)
+                    if suffix_m:
+                        suffix = suffix_m.group(1)
+                        pkg = f"ani.dantotsu.extension.novel.{suffix}"
+                        pkgs.add(pkg)
+                        name_m = re.search(r"extName\s*=\s*['\"]([^'\"]+)['\"]", text)
+                        code_m = re.search(r"extVersionCode\s*=\s*(\d+)", text)
+                        ver_m = re.search(r"extVersionName\s*=\s*['\"]([^'\"]+)['\"]", text)
+                        metas[pkg] = {
+                            "name": name_m.group(1) if name_m else suffix.capitalize(),
+                            "code": int(code_m.group(1)) if code_m else 1,
+                            "version": ver_m.group(1) if ver_m else "1.0",
+                            "module": mod.name
+                        }
+                except Exception as e:
+                    print(f"Error discovering module in {mod}: {e}")
+    # Also include existing novel APKs in repo/apk or apk/
+    for p in [REPO_APK_DIR, Path("apk")]:
+        if p.exists():
+            for apk in p.glob("ani.dantotsu.extension.novel.*.apk"):
+                pkgs.add(apk.stem)
+    return pkgs, metas
+
+VALID_PACKAGES, DEFAULT_METAS = discover_modules()
 
 SOURCES_DATA = {
     "ani.dantotsu.extension.novel.annaarchive": {
@@ -63,14 +90,6 @@ SOURCES_DATA = {
         "id": "8472910482019482710",
         "baseUrl": "https://wtr-lab.com"
     }
-}
-
-DEFAULT_METAS = {
-    "ani.dantotsu.extension.novel.annaarchive": {"name": "AnnaArchive", "code": 10, "version": "1.10", "module": "annaarchive"},
-    "ani.dantotsu.extension.novel.libgen": {"name": "Libgen", "code": 8, "version": "1.8", "module": "libgen"},
-    "ani.dantotsu.extension.novel.calibre": {"name": "Calibre", "code": 2, "version": "1.1", "module": "calibre"},
-    "ani.dantotsu.extension.novel.quotev": {"name": "Quotev", "code": 2, "version": "1.1", "module": "quotev"},
-    "ani.dantotsu.extension.novel.wtrlab": {"name": "WtrLab", "code": 2, "version": "1.1", "module": "wtrlab"}
 }
 
 def find_aapt() -> Path | None:
