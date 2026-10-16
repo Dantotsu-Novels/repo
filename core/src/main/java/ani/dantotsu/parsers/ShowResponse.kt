@@ -11,7 +11,7 @@ data class ShowResponse(
     val coverUrl: FileUrl,
     val otherNames: List<String> = listOf(),
     val total: Int? = null,
-    val extra: Map<String, String>? = null
+    val extra: MutableMap<String, String>? = null
 ) : Serializable {
     constructor(
         name: String,
@@ -19,7 +19,7 @@ data class ShowResponse(
         coverUrl: String,
         otherNames: List<String> = listOf(),
         total: Int? = null,
-        extra: Map<String, String>? = null
+        extra: MutableMap<String, String>? = null
     ) : this(name, link, FileUrl(coverUrl), otherNames, total, extra)
 
     constructor(

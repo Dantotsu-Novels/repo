@@ -23,13 +23,16 @@ class Calibre : NovelInterface, ConfigurableNovelSource {
     val name = "Calibre"
     val saveName = "calibre"
 
+    private var currentHost = DEFAULT_BASE_URL
+
     private val json = Json { ignoreUnknownKeys = true }
 
     private fun getBaseUrl(): String {
         val prefs = getSourcePreferences()
         val url = prefs.getString(PREF_BASE_URL, DEFAULT_BASE_URL)?.trim().orEmpty()
         val cleaned = if (url.isBlank()) DEFAULT_BASE_URL else url
-        return cleaned.removeSuffix("/")
+        currentHost = cleaned.removeSuffix("/")
+        return currentHost
     }
 
     private fun getHeaders(): Map<String, String> {
@@ -107,7 +110,7 @@ class Calibre : NovelInterface, ConfigurableNovelSource {
             ShowResponse(
                 name = book.title,
                 link = "$baseUrl/ajax/book/$id",
-                coverUrl = FileUrl(coverUrl, headers),
+                coverUrl = coverUrl,
                 extra = mutableMapOf(
                     "id" to id.toString(),
                     "title" to book.title,

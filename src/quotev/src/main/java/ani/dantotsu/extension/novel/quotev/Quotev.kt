@@ -17,7 +17,7 @@ class Quotev : NovelInterface, ConfigurableNovelSource {
     val name = "Quotev"
     val saveName = "quotev"
 
-    private val baseUrl = "https://www.quotev.com"
+    private var currentHost = "https://www.quotev.com"
 
     private val defaultHeaders = mapOf(
         "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
@@ -36,10 +36,10 @@ class Quotev : NovelInterface, ConfigurableNovelSource {
     override suspend fun search(query: String, client: Requests): List<ShowResponse> {
         val trimmed = query.trim()
         val url = if (trimmed.isBlank() || trimmed == "*") {
-            "$baseUrl/stories?v=users"
+            "$currentHost/stories?v=users"
         } else {
             val encodedQuery = URLEncoder.encode(trimmed, "UTF-8")
-            "$baseUrl/search/$encodedQuery"
+            "$currentHost/search/$encodedQuery"
         }
 
         val res = SafeHttp.get(client, url, defaultHeaders)
@@ -51,7 +51,7 @@ class Quotev : NovelInterface, ConfigurableNovelSource {
             val linkElem = card.selectFirst("h2 a[href*=/story/]") ?: return@mapNotNull null
             val href = linkElem.attr("abs:href").ifBlank {
                 val rel = linkElem.attr("href")
-                if (rel.startsWith("http")) rel else "$baseUrl$rel"
+                if (rel.startsWith("http")) rel else "$currentHost$rel"
             }
             val title = linkElem.text().trim()
             if (title.isBlank()) return@mapNotNull null
@@ -64,7 +64,7 @@ class Quotev : NovelInterface, ConfigurableNovelSource {
             ShowResponse(
                 name = title,
                 link = href,
-                coverUrl = FileUrl(cover, defaultHeaders),
+                coverUrl = cover,
                 extra = mutableMapOf(
                     "title" to title,
                     "author" to author,
@@ -75,7 +75,7 @@ class Quotev : NovelInterface, ConfigurableNovelSource {
     }
 
     override suspend fun loadBook(link: String, extra: Map<String, String>?, client: Requests): Book {
-        val targetUrl = if (link.startsWith("http://") || link.startsWith("https://")) link else "$baseUrl$link"
+        val targetUrl = if (link.startsWith("http://") || link.startsWith("https://")) link else "$currentHost$link"
         val res = SafeHttp.get(client, targetUrl, defaultHeaders)
 
         val doc = res.document

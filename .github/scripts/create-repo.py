@@ -68,9 +68,9 @@ SOURCES_DATA = {
 DEFAULT_METAS = {
     "ani.dantotsu.extension.novel.annaarchive": {"name": "AnnaArchive", "code": 10, "version": "1.10", "module": "annaarchive"},
     "ani.dantotsu.extension.novel.libgen": {"name": "Libgen", "code": 8, "version": "1.8", "module": "libgen"},
-    "ani.dantotsu.extension.novel.calibre": {"name": "Calibre", "code": 1, "version": "1.0", "module": "calibre"},
-    "ani.dantotsu.extension.novel.quotev": {"name": "Quotev", "code": 1, "version": "1.0", "module": "quotev"},
-    "ani.dantotsu.extension.novel.wtrlab": {"name": "WtrLab", "code": 1, "version": "1.0", "module": "wtrlab"}
+    "ani.dantotsu.extension.novel.calibre": {"name": "Calibre", "code": 2, "version": "1.1", "module": "calibre"},
+    "ani.dantotsu.extension.novel.quotev": {"name": "Quotev", "code": 2, "version": "1.1", "module": "quotev"},
+    "ani.dantotsu.extension.novel.wtrlab": {"name": "WtrLab", "code": 2, "version": "1.1", "module": "wtrlab"}
 }
 
 def find_aapt() -> Path | None:

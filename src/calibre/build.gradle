@@ -1,7 +1,7 @@
 ext {
     extName = 'Calibre'
-    extVersionName = '1.0'
-    extVersionCode = 1
+    extVersionName = '1.1'
+    extVersionCode = 2
     extSuffix = 'calibre'
 }
 

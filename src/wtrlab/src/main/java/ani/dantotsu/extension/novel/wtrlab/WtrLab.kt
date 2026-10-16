@@ -23,7 +23,7 @@ class WtrLab : NovelInterface, ConfigurableNovelSource {
     val name = "WtrLab"
     val saveName = "wtrlab"
 
-    private val baseUrl = "https://wtr-lab.com"
+    private var currentHost = "https://wtr-lab.com"
     private val imgBaseUrl = "https://wtr-lab.com/api/v2/img"
     private val lang = "en"
 
@@ -48,7 +48,7 @@ class WtrLab : NovelInterface, ConfigurableNovelSource {
     private suspend fun getBuildId(client: Requests): String {
         cachedBuildId?.let { return it }
 
-        val res = SafeHttp.get(client, "$baseUrl/$lang/novel-finder", defaultHeaders)
+        val res = SafeHttp.get(client, "$currentHost/$lang/novel-finder", defaultHeaders)
         val doc = res.document
         val nextData = doc.selectFirst("#__NEXT_DATA__")?.data()
         if (nextData != null) {
@@ -91,10 +91,10 @@ class WtrLab : NovelInterface, ConfigurableNovelSource {
         val buildId = getBuildId(client)
         val trimmed = query.trim()
         val url = if (trimmed.isBlank() || trimmed == "*") {
-            "$baseUrl/_next/data/$buildId/$lang/novel-finder.json?locale=$lang&page=1"
+            "$currentHost/_next/data/$buildId/$lang/novel-finder.json?locale=$lang&page=1"
         } else {
             val encoded = URLEncoder.encode(trimmed, "UTF-8")
-            "$baseUrl/_next/data/$buildId/$lang/novel-finder.json?text=$encoded&locale=$lang&page=1"
+            "$currentHost/_next/data/$buildId/$lang/novel-finder.json?text=$encoded&locale=$lang&page=1"
         }
 
         val res = SafeHttp.get(client, url, defaultHeaders)
@@ -124,11 +124,11 @@ class WtrLab : NovelInterface, ConfigurableNovelSource {
             val author = data["author"]?.jsonPrimitive?.contentOrNull.orEmpty()
             val desc = data["description"]?.jsonPrimitive?.contentOrNull.orEmpty()
 
-            val novelUrl = "$baseUrl/$lang/novel/$rawId/$slug"
+            val novelUrl = "$currentHost/$lang/novel/$rawId/$slug"
             ShowResponse(
                 name = title,
                 link = novelUrl,
-                coverUrl = FileUrl(coverUrl, defaultHeaders),
+                coverUrl = coverUrl,
                 extra = mutableMapOf(
                     "rawId" to rawId.toString(),
                     "slug" to slug,
@@ -158,7 +158,7 @@ class WtrLab : NovelInterface, ConfigurableNovelSource {
         if (rawId > 0) {
             val buildId = runCatching { getBuildId(client) }.getOrNull()
             if (!buildId.isNullOrBlank()) {
-                val detailsUrl = "$baseUrl/_next/data/$buildId/$lang/novel/$rawId/$slug.json?locale=$lang&raw_id=$rawId&serie_slug=$slug"
+                val detailsUrl = "$currentHost/_next/data/$buildId/$lang/novel/$rawId/$slug.json?locale=$lang&raw_id=$rawId&serie_slug=$slug"
                 val res = runCatching { SafeHttp.get(client, detailsUrl, defaultHeaders) }.getOrNull()
                 if (res != null && res.isSuccessful) {
                     val root = runCatching { json.parseToJsonElement(res.text).jsonObject }.getOrNull()
@@ -176,7 +176,7 @@ class WtrLab : NovelInterface, ConfigurableNovelSource {
         // Fetch chapter list from API
         val chapters = mutableListOf<FileUrl>()
         if (rawId > 0) {
-            val chaptersUrl = "$baseUrl/api/chapters/$rawId?start=1&end=500"
+            val chaptersUrl = "$currentHost/api/chapters/$rawId?start=1&end=500"
             val chRes = runCatching { SafeHttp.get(client, chaptersUrl, defaultHeaders) }.getOrNull()
             if (chRes != null && chRes.isSuccessful) {
                 val jsonResult = runCatching { json.parseToJsonElement(chRes.text).jsonObject }.getOrNull()
@@ -185,7 +185,7 @@ class WtrLab : NovelInterface, ConfigurableNovelSource {
                     val obj = el.jsonObject
                     val order = obj["order"]?.jsonPrimitive?.intOrNull ?: return@forEach
                     val chTitle = obj["title"]?.jsonPrimitive?.contentOrNull ?: "Chapter $order"
-                    val chUrl = "$baseUrl/$lang/novel/$rawId/chapter-$order"
+                    val chUrl = "$currentHost/$lang/novel/$rawId/chapter-$order"
                     chapters.add(FileUrl(chUrl, mapOf("X-Chapter-Name" to chTitle)))
                 }
             }
