@@ -4,12 +4,8 @@ on:
   push:
     branches:
       - repo
-    paths:
-      - '**'
-      - '!**.md'
-      - '!.github/**'
-      - '.github/scripts/**'
-      - '.github/workflows/build_push.yml'
+    paths-ignore:
+      - '**.md'
   workflow_dispatch:
 
 permissions:
